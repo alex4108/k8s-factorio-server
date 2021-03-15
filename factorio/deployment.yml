@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: factorio-live
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: factorio-live
+  template:
+    metadata:
+      labels:
+        app: factorio-live
+    spec:
+      containers:
+        - name: factorio-live
+          image: alex4108/factorio:10
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: factorio-udp
+              containerPort: 34197
+              protocol: UDP
+            - name: factorio-tcp
+              containerPort: 27015
+              protocol: TCP
+          volumeMounts:
+            - name: factorio-data
+              mountPath: /factorio
+          securityContext:
+            runAsUser: 0
+      volumes:
+        - name: factorio-data
+          persistentVolumeClaim:
+            claimName: factorio-live-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: factorio-live-udp
+spec:
+  type: LoadBalancer
+  ports:
+    - name: factorio-udp
+      port: 34197
+      targetPort: 34197
+      protocol: UDP 
+  selector:
+    app: factorio-live
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: factorio-live-tcp
+spec:
+  type: LoadBalancer
+  ports:
+    - name: factorio-tcp
+      port: 27015
+      targetPort: 27015
+      protocol: TCP 
+  selector:
+    app: factorio-live
+
